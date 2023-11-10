@@ -96,6 +96,10 @@ $("#play").on("click", handleClickOfPlay);
 function handleClickOfPlay ()
 {
   // todo set the game up if the play button is clickable
+  if (isPlayButtonClickable){
+    
+    setupTheGame();
+  }
 }
 
 /**
@@ -111,13 +115,32 @@ function handleClickOfPlay ()
  */
 async function setupTheGame ()
 {
+ 
   // todo show the spinner while setting up the game
+
+  if(!isPlayButtonClickable){
+    $('spinner').addClass('disabled');
+  }
+
 
   // todo reset the DOM (table, button text, the end text)
 
+  $('#categories').empty();
+
+  $('#clues').empty();
+
+  $('#active-clue').empty();
+
+  $('#play').empty();
+
   // todo fetch the game data (categories with clues)
 
+  const response = await axios.get("https://jservice.io/api/clues");
+  let resData = response.data;
+  
+  
   // todo fill the table
+  fillTable(category);
 }
 
 /**
@@ -130,9 +153,31 @@ async function setupTheGame ()
  */
 async function getCategoryIds ()
 {
-  const ids = []; // todo set after fetching
+  const ids = [];
 
-  // todo fetch NUMBER_OF_CATEGORIES amount of categories
+  const response = await axios.get("https://jservice.io/api/categories", {
+    params: {
+      count: NUMBER_OF_CATEGORIES,
+    },
+  });
+
+
+  for (const category of response.data) {
+    const clues = await axios.get("https://jservice.io/api/clues", {
+      params: {
+        category: category.id,
+      },
+    });
+   
+
+    if (clues.data.length >= NUMBER_OF_CATEGORIES) {
+      ids.push(category.id);
+    }
+
+    if (ids.length === NUMBER_OF_CATEGORIES) {
+      break;
+    }
+  }
 
   return ids;
 }
@@ -161,64 +206,125 @@ async function getCategoryIds ()
  */
 async function getCategoryData (categoryId)
 {
-  const categoryWithClues = {
+  const categoryWithClues = { 
     id: categoryId,
     title: undefined, // todo set after fetching
     clues: [] // todo set after fetching
+  
   };
 
   // todo fetch the category with NUMBER_OF_CLUES_PER_CATEGORY amount of clues
 
+ const response = await axios.get('https://jservice.io/api/category', {
+  params: {
+    id: `${categoryId}`,
+  },
+ });
+
+
+const { title, clues } = response.data;
+
+categoryWithClues.title = title;
+
+const [firstClue] = clues;
+ 
+if (clues.length >= NUMBER_OF_CLUES_PER_CATEGORY) {
+  categoryWithClues.clues.push(firstClue);
+};
+ 
   return categoryWithClues;
-}
+};
 
 /**
  * Fills the HTML table using category data.
  *
  * Hints:
  * - You need to call this function using an array of categories where each element comes from the `getCategoryData` function.
+ * 
  * - Table head (thead) has a row (#categories).
  *   For each category, you should create a cell element (th) and append that to it.
+ * 
  * - Table body (tbody) has a row (#clues).
- *   For each category, you should create a cell element (td) and append that to it.
- *   Besides, for each clue in a category, you should create a row element (tr) and append it to the corresponding previously created and appended cell element (td).
- * - To this row elements (tr) should add an event listener (handled by the `handleClickOfClue` function) and set their IDs with category and clue IDs. This will enable you to detect which clue is clicked.
+ *   For each category, create a cell element (td) and append that to it.
+ *   Besides, for each clue in a category, 
+ *   create a row element (tr) 
+ *   and append it to the corresponding previously created and appended cell element (td).
+ * 
+ * - To this row elements (tr) should add an event listener (handled by the `handleClickOfClue` function) 
+ *   and set their IDs with category and clue IDs. This will enable you to detect which clue is clicked.
  */
 function fillTable (categories)
 {
+//  const getCategoryData = await getCategoryData(3);
+//  console.log(getCategoryDatas)
+
+$('#categories').append(
+   '<th>', 
+   {text:  } 
+);
+
+$('#clues').append(
+   '<td>',
+   {text:  } 
+);
+
+$('#clues')(
+  '<tr>',
+   {text:  }
+   .appendTo('<td>')
+);
+
+$('').on('click', handleClickOfClue);
+
   // todo
+
 }
 
 $(".clue").on("click", handleClickOfClue);
 
 /**
  * Manages the behavior when a clue is clicked.
+ * 
  * Displays the question if there is no active question.
  *
  * Hints:
  * - Control the behavior using the `activeClueMode` variable.
+ * 
  * - Identify the category and clue IDs using the clicked element's ID.
+ * 
  * - Remove the clicked clue from categories since each clue should be clickable only once. Don't forget to remove the category if all the clues are removed.
+ * 
  * - Don't forget to update the `activeClueMode` variable.
  *
  */
 function handleClickOfClue (event)
 {
+  event.preventDeafult();
+
   // todo find and remove the clue from the categories
 
+
+
   // todo mark clue as viewed (you can use the class in style.css), display the question at #active-clue
+
+
+
 }
 
 $("#active-clue").on("click", handleClickOfActiveClue);
 
 /**
  * Manages the behavior when a displayed question or answer is clicked.
+ * 
  * Displays the answer if currently displaying a question.
+ * 
  * Clears if currently displaying an answer.
  *
  * Hints:
  * - Control the behavior using the `activeClueMode` variable.
+ * 
  * - After clearing, check the categories array to see if it is empty to decide to end the game.
+ * 
  * - Don't forget to update the `activeClueMode` variable.
  */
 function handleClickOfActiveClue (event)
@@ -226,6 +332,7 @@ function handleClickOfActiveClue (event)
   // todo display answer if displaying a question
 
   // todo clear if displaying an answer
+
   // todo after clear end the game when no clues are left
 
   if (activeClueMode === 1)
